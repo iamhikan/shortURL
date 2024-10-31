@@ -7,9 +7,8 @@ import (
 )
 
 func Routes(router *chi.Mux, srv *service.Service) {
-	// пример обработчика запроса, в его качестве выступает функция MainPage
+
 	// обрати внимание, что мы передаем именно саму функцию как параметр
-	router.Get("/", srv.MainPage)
 	router.Post("/", srv.CreateShortURL)
 	router.Get("/{id}", srv.GetOriginalURL)
 }

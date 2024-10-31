@@ -5,12 +5,17 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type Service struct {
+	Storage *Storage
+}
+
+type Storage struct {
 	LinksStorage     map[int]string
 	IncrementStorage int // последний айди
 	mu               sync.RWMutex
@@ -18,49 +23,59 @@ type Service struct {
 
 func New() *Service {
 	return &Service{
-		LinksStorage: make(map[int]string),
+		Storage: &Storage{LinksStorage: make(map[int]string)},
 	}
 }
 
 //все ниже в этом файле - handlers
 // http обработчики
 
-func (s *Service) MainPage(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("hello, world"))
-}
-
 // ручка на POST /
 func (s *Service) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
+
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	s.mu.Lock()
-	s.LinksStorage[s.IncrementStorage] = string(body)
+	s.Storage.mu.Lock()
+	s.Storage.LinksStorage[s.Storage.IncrementStorage] = string(body)
 	defer func() {
-		s.IncrementStorage++
-		s.mu.Unlock()
+		s.Storage.IncrementStorage++
+		s.Storage.mu.Unlock()
 	}()
 
-	res := fmt.Sprintf("%s/%d", "localhost:8080", s.IncrementStorage)
+	res := fmt.Sprintf("%s/%d", "localhost:8080", s.Storage.IncrementStorage)
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
 }
 
 // ручка на GET /{id}
 func (s *Service) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	idStr := chi.URLParam(r, "id")
+
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("incorrect format of id"))
 		return
 	}
-	if _, found := s.LinksStorage[id]; !found {
-		w.Write([]byte("incorrect link"))
-	}
-	w.WriteHeader(307)
-	w.Header().Set("Location", s.LinksStorage[id])
 
+	s.Storage.mu.RLock()
+	defer func() {
+		s.Storage.mu.RUnlock()
+	}()
+	OriginalURL, found := s.Storage.LinksStorage[id]
+	if !found {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("incorrect link"))
+		return
+	}
+	if !strings.HasPrefix(OriginalURL, "http://") && !strings.HasPrefix(OriginalURL, "https://") {
+		OriginalURL = "http://" + OriginalURL
+	}
+	w.Header().Set("Location", OriginalURL)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
