@@ -1,0 +1,8 @@
+mockname: "Mock{{.InterfaceName}}"
+dir: gen/mocks
+outpkg: mocks
+with-expecter: true
+packages:
+  short_url/internal/repository:
+    interfaces:
+      IStorage:
