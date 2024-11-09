@@ -46,7 +46,6 @@ func (s *Service) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.Atoi(idStr)
-
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("incorrect format of id"))
