@@ -4,26 +4,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"short_url/internal/repository"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type Service struct {
-	Storage *Storage
+	Storage repository.IStorage
 }
 
-type Storage struct {
-	LinksStorage     map[int]string
-	IncrementStorage int // последний айди
-	mu               sync.RWMutex
-}
-
-func New() *Service {
+func New(stor repository.IStorage) *Service {
 	return &Service{
-		Storage: &Storage{LinksStorage: make(map[int]string)},
+		Storage: stor,
 	}
 }
 
@@ -40,14 +34,9 @@ func (s *Service) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Storage.mu.Lock()
-	s.Storage.LinksStorage[s.Storage.IncrementStorage] = string(body)
-	defer func() {
-		s.Storage.IncrementStorage++
-		s.Storage.mu.Unlock()
-	}()
+	id := s.Storage.Set(string(body))
 
-	res := fmt.Sprintf("%s/%d", "localhost:8080", s.Storage.IncrementStorage)
+	res := fmt.Sprintf("%s/%d", "localhost:8080", id)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
 }
@@ -63,19 +52,15 @@ func (s *Service) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Storage.mu.RLock()
-	defer func() {
-		s.Storage.mu.RUnlock()
-	}()
-	OriginalURL, found := s.Storage.LinksStorage[id]
+	originalURL, found := s.Storage.Get(id)
 	if !found {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("incorrect link"))
 		return
 	}
-	if !strings.HasPrefix(OriginalURL, "http://") && !strings.HasPrefix(OriginalURL, "https://") {
-		OriginalURL = "http://" + OriginalURL
+	if !strings.HasPrefix(originalURL, "http://") && !strings.HasPrefix(originalURL, "https://") {
+		originalURL = "http://" + originalURL
 	}
-	w.Header().Set("Location", OriginalURL)
+	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
