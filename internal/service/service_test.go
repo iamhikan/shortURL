@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"short_url/gen/mocks"
@@ -60,4 +61,31 @@ func (s *serviceSuite) TestGetOriginalURL() {
 
 	s.Equal(http.StatusTemporaryRedirect, res.Code)
 	s.Equal(reqBody, res.Header().Get("Location"))
+}
+
+func (s *serviceSuite) TestCreateShortURLFromJSON() {
+
+	var req service.CreateShortURLFromJSONReq
+	req.URL = "some_url"
+	expectedID := 1
+
+	reqMar, err := json.Marshal(req)
+	if err != nil {
+		s.T().Fatalf("Ошибка маршализации запроса: %v", err)
+	}
+
+	s.mockStorage.EXPECT().Set(req.URL).Return(expectedID)
+	res := test.DoRequest(s.T(), s.service.CreateShortURLFromJSON, http.MethodPost, "/api/shorten", reqMar, nil)
+
+	expectedUrl := service.CreateShortURLFromJSONRes{
+		Result: fmt.Sprintf("localhost:8080/%d", expectedID),
+	}
+	expectedRes, err := json.Marshal(expectedUrl)
+	if err != nil {
+		s.T().Fatalf("Ошибка маршализации запроса: %v", err)
+	}
+
+	s.Equal(http.StatusCreated, res.Code, "Ожидаемый статус код не совпадает")
+	s.JSONEq(string(expectedRes), res.Body.String(), fmt.Sprintf("Expected: %s, Got: %s", string(expectedRes), res.Body.String()))
+
 }

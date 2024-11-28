@@ -11,6 +11,8 @@ func Routes(router *chi.Mux, srv *service.Service) {
 	// обрати внимание, что мы передаем именно саму функцию как параметр
 	router.Post("/", srv.CreateShortURL)
 	router.Get("/{id}", srv.GetOriginalURL)
+	router.Post("/api/shorten", srv.CreateShortURLFromJSON)
+
 }
 
 // HTTP
