@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -63,4 +64,23 @@ func (s *Service) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (s *Service) CreateShortURLFromJSON(w http.ResponseWriter, r *http.Request) {
+	var curURL CreateShortURLFromJSONReq
+	if err := json.NewDecoder(r.Body).Decode(&curURL); err != nil {
+		http.Error(w, "Некорректный формат", http.StatusBadRequest)
+	}
+
+	id := s.Storage.Set(curURL.URL)
+	newShortLink := CreateShortURLFromJSONRes{
+		Result: fmt.Sprintf("%s/%d", "localhost:8080", id),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(newShortLink); err != nil {
+		http.Error(w, "Ошибка при маршалинге ответа", http.StatusInternalServerError)
+	}
 }
