@@ -4,21 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"short_url/internal/repository"
 	"strconv"
 	"strings"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
 )
 
 type Service struct {
 	Storage repository.IStorage
+	Config  Config
 }
 
 func New(stor repository.IStorage) *Service {
+	var Cfg Config
+	if err := env.Parse(&Cfg); err != nil {
+		log.Fatal(err)
+	}
 	return &Service{
 		Storage: stor,
+		Config:  Cfg,
 	}
 }
 
@@ -37,7 +45,7 @@ func (s *Service) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 
 	id := s.Storage.Set(string(body))
 
-	res := fmt.Sprintf("%s/%d", "localhost:8080", id)
+	res := fmt.Sprintf("%s/%d", s.Config.BaseURL, id)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
 }
@@ -74,7 +82,7 @@ func (s *Service) CreateShortURLFromJSON(w http.ResponseWriter, r *http.Request)
 
 	id := s.Storage.Set(curURL.URL)
 	newShortLink := CreateShortURLFromJSONRes{
-		Result: fmt.Sprintf("%s/%d", "localhost:8080", id),
+		Result: fmt.Sprintf("%s/%d", s.Config.BaseURL, id),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
