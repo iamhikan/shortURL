@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"short_url/config"
 	"short_url/internal/repository"
 	"strconv"
 	"strings"
 
-	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -21,13 +19,9 @@ type Service struct {
 }
 
 func New(stor repository.IStorage) *Service {
-	var Cfg config.Config
-	if err := env.Parse(&Cfg); err != nil {
-		log.Fatal(err)
-	}
 	return &Service{
 		Storage: stor,
-		Config:  Cfg,
+		Config:  *config.New(),
 	}
 }
 
