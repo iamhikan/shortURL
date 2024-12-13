@@ -39,8 +39,7 @@ func (s *serviceSuite) TestCreateShortURL() {
 	s.mockStorage.EXPECT().Set(string(reqBody)).Return(expectedID)
 
 	res := test.DoRequest(s.T(), s.service.CreateShortURL, http.MethodPost, "/", reqBody, nil)
-
-	expectedRes := []byte(fmt.Sprintf("localhost:8080/%d", expectedID))
+	expectedRes := []byte(fmt.Sprintf("%s/%d", s.service.Config.BaseURL, expectedID))
 
 	s.Equal(http.StatusCreated, res.Code)
 	s.Equal(expectedRes, res.Body.Bytes())
@@ -78,7 +77,7 @@ func (s *serviceSuite) TestCreateShortURLFromJSON() {
 	res := test.DoRequest(s.T(), s.service.CreateShortURLFromJSON, http.MethodPost, "/api/shorten", reqMar, nil)
 
 	expectedUrl := service.CreateShortURLFromJSONRes{
-		Result: fmt.Sprintf("localhost:8080/%d", expectedID),
+		Result: fmt.Sprintf("%s/%d", s.service.Config.BaseURL, expectedID),
 	}
 	expectedRes, err := json.Marshal(expectedUrl)
 	if err != nil {

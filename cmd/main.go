@@ -12,8 +12,7 @@ func main() {
 	stor := repository.New()
 	srv := service.New(stor)
 	router.Routes(r, srv)
-
-	err := http.ListenAndServe("localhost:8080", r)
+	err := http.ListenAndServe(srv.Config.ServerAddress, r)
 	if err != nil {
 		panic(err)
 	}
