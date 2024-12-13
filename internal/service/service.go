@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"short_url/config"
 	"short_url/internal/repository"
 	"strconv"
 	"strings"
@@ -16,11 +17,11 @@ import (
 
 type Service struct {
 	Storage repository.IStorage
-	Config  Config
+	Config  config.Config
 }
 
 func New(stor repository.IStorage) *Service {
-	var Cfg Config
+	var Cfg config.Config
 	if err := env.Parse(&Cfg); err != nil {
 		log.Fatal(err)
 	}
