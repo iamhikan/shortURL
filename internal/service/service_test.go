@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"short_url/config"
 	"short_url/gen/mocks"
 	"short_url/internal/service"
 	"short_url/pkg/test"
 	"strconv"
 	"testing"
 
+	"github.com/caarlos0/env"
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -28,8 +31,10 @@ func TestServiceSuite(t *testing.T) {
 
 func (s *serviceSuite) SetupSuite() {
 	s.mockStorage = mocks.NewMockIStorage(s.T())
-
-	s.service = service.New(s.mockStorage)
+	godotenv.Load()
+	var Cfg config.Config
+	env.Parse(&Cfg)
+	s.service = service.New(s.mockStorage, Cfg)
 }
 
 func (s *serviceSuite) TestCreateShortURL() {

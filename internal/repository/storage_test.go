@@ -9,7 +9,7 @@ import (
 
 type StorageSuite struct {
 	suite.Suite
-	Storage *repository.Storage
+	Storage *repository.LocalStorage
 }
 
 func TestStorageSuite(t *testing.T) {

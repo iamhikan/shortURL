@@ -18,10 +18,10 @@ type Service struct {
 	Config  config.Config
 }
 
-func New(stor repository.IStorage) *Service {
+func New(stor repository.IStorage, cfg config.Config) *Service {
 	return &Service{
 		Storage: stor,
-		Config:  *config.New(),
+		Config:  cfg,
 	}
 }
 
