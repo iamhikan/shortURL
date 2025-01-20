@@ -17,6 +17,16 @@ func (_m *MockIStorage) EXPECT() *MockIStorage_Expecter {
 	return &MockIStorage_Expecter{mock: &_m.Mock}
 }
 
+// Close provides a mock function for Close method.
+func (_m *MockIStorage) Close() error {
+	ret := _m.Called()
+
+	if rf, ok := ret.Get(0).(func() error); ok {
+		return rf()
+	}
+	return ret.Error(0)
+}
+
 // Get provides a mock function with given fields: id
 func (_m *MockIStorage) Get(id int) (string, bool) {
 	ret := _m.Called(id)
