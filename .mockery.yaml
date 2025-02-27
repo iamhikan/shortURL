@@ -6,3 +6,6 @@ packages:
   short_url/internal/repository:
     interfaces:
       IStorage:
+  short_url/internal/repository/filestorage:
+    interfaces:
+      ILinkStorage:

@@ -15,25 +15,20 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("ошибка загрузки .env файла: %v", err)
+		log.Fatalf("error loading .env file: %v", err)
 	}
 
 	var cfg config.Config
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("ошибка при парсинге конфигурации: %v", err)
+		log.Fatalf("error parsing configuration: %v", err)
 	}
 
-	var stor repository.IStorage
-	if cfg.FileStoragePath == "" {
-		stor = repository.New()
-	} else {
-		stor = repository.NewFileStorage(cfg.FileStoragePath)
-		defer func() {
-			if err := stor.Close(); err != nil {
-				log.Fatalf("ошибка при закрытии файла: %v", err)
-			}
-		}()
-	}
+	stor := repository.New(cfg)
+	defer func() {
+		if err := stor.Close(); err != nil {
+			log.Fatalf("error closing file: %v", err)
+		}
+	}()
 
 	srv := service.New(stor, cfg)
 	r := router.SetupRouter()
