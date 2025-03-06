@@ -1,7 +1,7 @@
-package repository_test
+package inmemory_test
 
 import (
-	"short_url/internal/repository"
+	"short_url/internal/repository/inmemory"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -9,7 +9,7 @@ import (
 
 type StorageSuite struct {
 	suite.Suite
-	Storage *repository.Storage
+	Storage *inmemory.LocalStorage
 }
 
 func TestStorageSuite(t *testing.T) {
@@ -17,7 +17,7 @@ func TestStorageSuite(t *testing.T) {
 }
 
 func (s *StorageSuite) SetupSuite() {
-	storage := repository.New()
+	storage := inmemory.New()
 
 	s.Storage = storage
 }

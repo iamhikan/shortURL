@@ -1,21 +1,22 @@
-package repository
+package inmemory
 
 import "sync"
 
-type Storage struct {
+// Логика для хранения данных в локальной сессии
+type LocalStorage struct {
 	LinksStorage     map[int]string
 	IncrementStorage int // последний айди
 	mu               sync.RWMutex
 }
 
-func New() *Storage {
-	return &Storage{
+func New() *LocalStorage {
+	return &LocalStorage{
 		LinksStorage:     make(map[int]string),
 		IncrementStorage: 1,
 	}
 }
 
-func (s *Storage) Get(id int) (string, bool) {
+func (s *LocalStorage) Get(id int) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -23,7 +24,7 @@ func (s *Storage) Get(id int) (string, bool) {
 	return v, found
 }
 
-func (s *Storage) Set(link string) int {
+func (s *LocalStorage) Set(link string) int {
 	s.mu.Lock()
 	defer func() {
 		s.IncrementStorage++
@@ -31,4 +32,8 @@ func (s *Storage) Set(link string) int {
 	}()
 	s.LinksStorage[s.IncrementStorage] = link
 	return s.IncrementStorage
+}
+
+func (s *LocalStorage) Close() error {
+	return nil
 }
